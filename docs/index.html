@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Дневник мигрени — v3</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --bg-gradient-1: rgba(56,189,248,0.12);
+      --bg-gradient-2: rgba(74,222,128,0.10);
+      --panel: rgba(15, 23, 42, 0.88);
+      --panel-solid: #111827;
+      --panel-2: #182235;
+      --panel-3: #22304a;
+      --text: #e5eefb;
+      --muted: #98a7c2;
+      --accent: #7dd3fc;
+      --accent-strong: #38bdf8;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --danger: #fb7185;
+      --border: rgba(148, 163, 184, 0.18);
+      --shadow: 0 20px 40px rgba(0,0,0,0.3);
+      --radius: 18px;
+      --font-scale: 1;
+      --content-width: 1280px;
+      --card-blur: 12px;
+      --chart-bg: rgba(8, 15, 28, 0.7);
+      --badge-bg: rgba(34, 48, 74, 0.95);
+      --note-bg: rgba(24, 34, 53, 0.7);
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      font-size: calc(16px * var(--font-scale));
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, var(--bg-gradient-1), transparent 30%),
+        radial-gradient(circle at top left, var(--bg-gradient-2), transparent 25%),
+        linear-gradient(180deg, color-mix(in srgb, var(--bg) 72%, black), var(--bg) 42%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .app {
+      width: min(var(--content-width), 100%);
+      margin: 0 auto;
+      padding: 16px;
+      padding-bottom: 90px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 38px);
+      line-height: 1.06;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .save-dot,
+    .icon-btn,
+    .segmented button,
+    .tab-btn,
+    button {
+      min-height: 46px;
+    }
+
+    .save-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: color-mix(in srgb, var(--success) 45%, var(--text));
+      font-size: 14px;
+      background: color-mix(in srgb, var(--success) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--success) 24%, transparent);
+      padding: 10px 14px;
+      border-radius: 999px;
+    }
+
+    .save-dot::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--success) 18%, transparent);
+    }
+
+    .icon-btn,
+    button {
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--panel-3) 80%, transparent);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .primary {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, white), var(--accent-strong));
+      color: #082f49;
+      border: none;
+    }
+
+    .success {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--success) 72%, white), var(--success));
+      color: #052e16;
+      border: none;
+    }
+
+    .danger {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--danger) 80%, white), var(--danger));
+      color: white;
+      border: none;
+    }
+
+    .ghost {
+      background: transparent;
+    }
+
+    .top-tabs,
+    .tabs,
+    .segmented {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn,
+    .segmented button {
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .tab-btn.active,
+    .segmented button.active {
+      background: color-mix(in srgb, var(--accent-strong) 16%, transparent);
+      border-color: color-mix(in srgb, var(--accent-strong) 42%, transparent);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .stack { display: grid; gap: 16px; }
+
+    .card {
+      background: var(--panel);
+      backdrop-filter: blur(var(--card-blur));
+      -webkit-backdrop-filter: blur(var(--card-blur));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-head { padding: 16px 16px 0; }
+    .card-body { padding: 16px; }
+
+    h2, h3, h4 { margin: 0; }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 6px;
+      line-height: 1.45;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .form-grid,
+    .filters-grid,
+    .stats-grid,
+    .report-grid,
+    .settings-grid,
+    .calendar-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .form-grid,
+    .filters-grid,
+    .report-grid,
+    .settings-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .calendar-grid {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    label,
+    .group-title {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 7px;
+      color: color-mix(in srgb, var(--text) 94%, white);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--panel-2) 92%, transparent);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 13px;
+      outline: none;
+      font: inherit;
+      appearance: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: color-mix(in srgb, var(--accent-strong) 58%, transparent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-strong) 12%, transparent);
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent-strong);
+    }
+
+    input[type="range"] {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .switch-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .switch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--panel-2) 76%, transparent);
+      border-radius: 14px;
+      padding: 12px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .switch.active {
+      background: color-mix(in srgb, var(--accent-strong) 14%, transparent);
+      border-color: color-mix(in srgb, var(--accent-strong) 44%, transparent);
+    }
+
+    .slider-wrap { display: grid; gap: 10px; }
+
+    .pain-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 68px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent-strong) 14%, transparent);
+      font-weight: 800;
+      font-size: 1.05rem;
+      border: 1px solid color-mix(in srgb, var(--accent-strong) 28%, transparent);
+    }
+
+    .scale-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .chip-grid,
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip,
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      background: color-mix(in srgb, var(--panel-solid) 72%, transparent);
+      color: var(--text);
+      font-size: 0.8rem;
+    }
+
+    .chip.active {
+      background: color-mix(in srgb, var(--accent-strong) 14%, transparent);
+      border-color: color-mix(in srgb, var(--accent-strong) 40%, transparent);
+    }
+
+    .inline-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .helper {
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-top: 6px;
+    }
+
+    .stat {
+      background: color-mix(in srgb, var(--panel-solid) 72%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .stat .label { color: var(--muted); font-size: 0.8rem; }
+    .stat .value { font-size: clamp(22px, 5vw, 30px); font-weight: 800; margin-top: 8px; }
+    .stat .tiny { color: var(--muted); font-size: 0.74rem; margin-top: 4px; }
+
+    .insights {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 8px;
+      line-height: 1.45;
+    }
+
+    .history-toolbar {
+      display: grid;
+      gap: 10px;
+    }
+
+    .entry-list {
+      display: grid;
+      gap: 12px;
+      max-height: 1200px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .entry-group-title {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 800;
+    }
+
+    .entry {
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--panel-solid) 74%, transparent);
+      border-left: 5px solid transparent;
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .entry.severity-low { border-left-color: #22c55e; }
+    .entry.severity-mid { border-left-color: #fbbf24; }
+    .entry.severity-high { border-left-color: #fb7185; }
+    .entry.no-pain { border-left-color: #60a5fa; }
+
+    .entry-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .entry-date {
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .entry-sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .entry-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--note-bg);
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .empty {
+      padding: 22px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--panel-solid) 55%, transparent);
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .calendar-day-name {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .calendar-day {
+      min-height: 84px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--panel-solid) 72%, transparent);
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    .calendar-day.other-month {
+      opacity: 0.35;
+    }
+
+    .calendar-day.today {
+      outline: 2px solid color-mix(in srgb, var(--accent-strong) 50%, transparent);
+    }
+
+    .calendar-day.no-pain { background: color-mix(in srgb, #60a5fa 22%, var(--panel-solid)); }
+    .calendar-day.severity-low { background: color-mix(in srgb, #22c55e 18%, var(--panel-solid)); }
+    .calendar-day.severity-mid { background: color-mix(in srgb, #fbbf24 24%, var(--panel-solid)); }
+    .calendar-day.severity-high { background: color-mix(in srgb, #fb7185 22%, var(--panel-solid)); }
+
+    .calendar-day strong {
+      font-size: 0.95rem;
+    }
+
+    .calendar-mini {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.25;
+    }
+
+    .report-box {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      background: color-mix(in srgb, var(--panel-solid) 72%, transparent);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .modal.hidden { display: none; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.48);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      position: relative;
+      width: min(1120px, 100%);
+      max-height: min(90vh, 1000px);
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.38);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 16px 0;
+    }
+
+    .modal-body { padding: 16px; }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      .entry-list { max-height: none; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chart-wrap canvas {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+    }
+
+    @media (max-width: 720px) {
+      .app { padding: 12px; padding-bottom: 92px; }
+      .hero { flex-direction: column; }
+      .hero-actions { width: 100%; justify-content: stretch; }
+      .hero-actions > * { width: 100%; }
+      .card-head, .card-body, .modal-body { padding: 14px; }
+      .modal-head { padding: 14px 14px 0; }
+      .form-grid, .filters-grid, .stats-grid, .report-grid, .settings-grid { grid-template-columns: 1fr; }
+      .switch-row { grid-template-columns: 1fr; }
+      .inline-row { grid-template-columns: 1fr; }
+      .entry-head { flex-direction: column; }
+      .entry-actions { width: 100%; }
+      .entry-actions button { flex: 1; width: 100%; }
+      .modal-content { width: 100%; max-height: 92vh; border-radius: 20px; }
+      .calendar-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+      .calendar-day { min-height: 48px; padding: 4px; border-radius: 8px; }
+      .calendar-day strong { font-size: 0.78rem; }
+      .calendar-mini { font-size: 0.62rem; }
+      .calendar-day-name { font-size: 0.65rem; }
+    }
+  </style>
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#13303b">
+<link rel="manifest" href="manifest.webmanifest">
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");</script>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div>
+        <h1>Дневник мигрени</h1>
+        <p>Локальная версия v3: быстрый ввод, фильтры, календарь, отчёты, расширенная аналитика и аккуратные настройки в одном файле.</p>
+      </div>
+      <div class="hero-actions">
+        <div class="save-dot">Автосохранение включено</div>
+        <button type="button" class="icon-btn" id="openSettingsBtn">⚙ Настройки</button>
+      </div>
+    </section>
+
+    <div class="top-tabs" id="mainTabs">
+      <button class="tab-btn active" data-main-tab="dashboardTab" type="button">Обзор</button>
+      <button class="tab-btn" data-main-tab="calendarTab" type="button">Календарь</button>
+      <button class="tab-btn" data-main-tab="reportsTab" type="button">Отчёты</button>
+    </div>
+
+    <div id="dashboardTab" class="main-tab">
+      <div class="layout" style="margin-top:16px;">
+        <div class="stack">
+          <section class="card">
+            <div class="card-head">
+              <h2 id="formTitle">Новая запись</h2>
+              <div class="subtle">Есть обычный и быстрый режим. Когда голова решила устроить свой митинг — быстрый режим особенно полезен.</div>
+              <div class="tabs" id="entryModeTabs">
+                <button class="tab-btn active" data-entry-mode="full" type="button">Полная запись</button>
+                <button class="tab-btn" data-entry-mode="quick" type="button">Быстрая запись</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <form id="entryForm" class="form-grid">
+                <div class="field">
+                  <label for="date">Дата</label>
+                  <input id="date" type="date" required />
+                </div>
+
+                <div class="field">
+                  <label for="startTime">Время начала</label>
+                  <input id="startTime" type="time" />
+                </div>
+
+                <div class="field full">
+                  <span class="group-title">Была ли головная боль в этот день?</span>
+                  <div class="switch-row">
+                    <button type="button" class="switch active" id="hadPainYes">Да, была</button>
+                    <button type="button" class="switch" id="hadPainNo">Нет, день без боли</button>
+                  </div>
+                </div>
+
+                <div class="field full" id="painSection">
+                  <label for="painLevel">Сила боли</label>
+                  <div class="slider-wrap">
+                    <div class="pain-badge"><span id="painValue">5</span>/10</div>
+                    <input id="painLevel" type="range" min="1" max="10" value="5" />
+                    <div class="scale-bar"><span>Слабая</span><span>Сильная</span></div>
+                  </div>
+                </div>
+
+                <div class="field quick-hide">
+                  <label for="duration">Длительность (часы)</label>
+                  <input id="duration" type="number" min="0" step="0.5" placeholder="Например 2.5" />
+                </div>
+
+                <div class="field quick-hide">
+                  <label for="stressLevel">Стресс (0–10)</label>
+                  <input id="stressLevel" type="number" min="0" max="10" step="1" placeholder="Например 6" />
+                </div>
+
+                <div class="field quick-hide">
+                  <label for="sleepHours">Сон (часы)</label>
+                  <input id="sleepHours" type="number" min="0" max="24" step="0.5" placeholder="Например 6.5" />
+                </div>
+
+                <div class="field quick-hide">
+                  <label for="hydration">Вода / гидратация</label>
+                  <select id="hydration">
+                    <option value="">Не указано</option>
+                    <option value="low">Мало воды</option>
+                    <option value="normal">Нормально</option>
+                    <option value="high">Много воды</option>
+                  </select>
+                </div>
+
+                <div class="field quick-hide">
+                  <label for="mealStatus">Питание</label>
+                  <select id="mealStatus">
+                    <option value="">Не указано</option>
+                    <option value="normal">Еда как обычно</option>
+                    <option value="skipped">Пропуск еды</option>
+                    <option value="late">Поздний приём пищи</option>
+                  </select>
+                </div>
+
+                <div class="field quick-hide">
+                  <label for="weatherNote">Погода / давление</label>
+                  <input id="weatherNote" type="text" placeholder="Например: дождь, перепад давления" />
+                </div>
+
+                <div class="field full">
+                  <span class="group-title">Лекарство</span>
+                  <div class="inline-row">
+                    <select id="medicationSelect"></select>
+                    <button type="button" id="addMedicationBtn">Добавить</button>
+                  </div>
+                  <div id="selectedMedications" class="chip-grid" style="margin-top:10px;"></div>
+                </div>
+
+                <div class="field full quick-hide">
+                  <span class="group-title">Провоцирующие факторы</span>
+                  <div id="triggersBox" class="chip-grid"></div>
+                </div>
+
+                <div class="field full quick-hide">
+                  <span class="group-title">Симптомы</span>
+                  <div id="symptomsBox" class="chip-grid"></div>
+                </div>
+
+                <div class="field full quick-hide">
+                  <label for="notes">Примечание</label>
+                  <textarea id="notes" placeholder="Что происходило, что могло повлиять, помогли ли лекарства, как ощущалась боль..."></textarea>
+                </div>
+
+                <div class="field">
+                  <label for="medicationDose">Дозировка</label>
+                  <input id="medicationDose" type="text" placeholder="Например 50 мг" />
+                </div>
+
+                <div class="field">
+                  <label for="medicationEffect">Эффект лекарства</label>
+                  <select id="medicationEffect">
+                    <option value="">Не указано</option>
+                    <option value="helped">Помогло</option>
+                    <option value="partial">Частично</option>
+                    <option value="no">Не помогло</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="reliefMinutes">Через сколько помогло (мин.)</label>
+                  <input id="reliefMinutes" type="number" min="0" step="5" placeholder="Например 40" />
+                </div>
+
+                <div class="field">
+                  <label class="group-title">Важная запись</label>
+                  <label class="chip"><input id="isImportant" type="checkbox" /> <span>Отметить как важную</span></label>
+                </div>
+
+                <div class="full btn-row">
+                  <button type="submit" class="success" id="saveEntryBtn">Сохранить запись</button>
+                  <button type="button" id="cancelEditBtn" style="display:none;">Отменить редактирование</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <h2>График интенсивности</h2>
+              <div class="subtle">Показывает дни с болью в текущей выборке.</div>
+            </div>
+            <div class="card-body">
+              <div class="chart-wrap">
+                <canvas id="painChart" width="900" height="320"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="stack">
+          <section class="card">
+            <div class="card-head">
+              <h2>Фильтры и аналитика</h2>
+              <div class="subtle">Фильтрация влияет на историю, календарь, график и отчёты.</div>
+            </div>
+            <div class="card-body">
+              <div class="filters-grid">
+                <div class="field">
+                  <label for="periodPreset">Период</label>
+                  <select id="periodPreset">
+                    <option value="all">Всё время</option>
+                    <option value="today">Сегодня</option>
+                    <option value="7d">7 дней</option>
+                    <option value="30d">30 дней</option>
+                    <option value="month">Текущий месяц</option>
+                    <option value="custom">Свой диапазон</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="painFilter">Тип дня</label>
+                  <select id="painFilter">
+                    <option value="all">Все</option>
+                    <option value="pain">Только с болью</option>
+                    <option value="nopain">Только без боли</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="fromDate">С даты</label>
+                  <input id="fromDate" type="date" />
+                </div>
+                <div class="field">
+                  <label for="toDate">По дату</label>
+                  <input id="toDate" type="date" />
+                </div>
+                <div class="field">
+                  <label for="severityFilter">Сила боли</label>
+                  <select id="severityFilter">
+                    <option value="all">Любая</option>
+                    <option value="1-3">1–3</option>
+                    <option value="4-6">4–6</option>
+                    <option value="7-10">7–10</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="importantOnly">Важные</label>
+                  <label class="chip"><input id="importantOnly" type="checkbox" /> <span>Только важные записи</span></label>
+                </div>
+                <div class="field">
+                  <label for="medicationFilter">Лекарство</label>
+                  <select id="medicationFilter"></select>
+                </div>
+                <div class="field">
+                  <label for="triggerFilter">Триггер</label>
+                  <select id="triggerFilter"></select>
+                </div>
+                <div class="field">
+                  <label for="symptomFilter">Симптом</label>
+                  <select id="symptomFilter"></select>
+                </div>
+                <div class="field full btn-row">
+                  <button type="button" id="resetFiltersBtn">Сбросить фильтры</button>
+                </div>
+              </div>
+
+              <div class="stats-grid section-spacer">
+                <div class="stat"><div class="label">Записей</div><div class="value" id="totalEntries">0</div><div class="tiny">после фильтрации</div></div>
+                <div class="stat"><div class="label">Дней с болью</div><div class="value" id="painDays">0</div><div class="tiny">в текущей выборке</div></div>
+                <div class="stat"><div class="label">Дней без боли</div><div class="value" id="noPainDays">0</div><div class="tiny">для баланса картины</div></div>
+                <div class="stat"><div class="label">Средняя боль</div><div class="value" id="avgPain">0</div><div class="tiny">по дням с болью</div></div>
+                <div class="stat"><div class="label">Средняя длительность</div><div class="value" id="avgDuration">0ч</div><div class="tiny">по дням с болью</div></div>
+                <div class="stat"><div class="label">Максимум</div><div class="value" id="maxPain">0</div><div class="tiny">самая сильная боль</div></div>
+              </div>
+
+              <div class="section-spacer">
+                <h3>Паттерны</h3>
+                <ul id="insights" class="insights"></ul>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <div class="history-head">
+                <div>
+                  <h2>История</h2>
+                  <div class="subtle">Группировка по месяцам, важные записи, поиск и цветовая маркировка.</div>
+                </div>
+                <div class="search-box">
+                  <input id="searchInput" type="text" placeholder="Поиск по заметкам, лекарствам, триггерам..." />
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="entryList" class="entry-list"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="calendarTab" class="main-tab" style="display:none; margin-top:16px;">
+      <section class="card">
+        <div class="card-head">
+          <div class="calendar-header">
+            <button type="button" id="prevMonthBtn">←</button>
+            <div>
+              <h2 id="calendarTitle">Календарь</h2>
+              <div class="subtle">Цвет показывает интенсивность или день без боли.</div>
+            </div>
+            <button type="button" id="nextMonthBtn">→</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="calendar-grid" id="calendarDayNames"></div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="reportsTab" class="main-tab" style="display:none; margin-top:16px;">
+      <section class="card">
+        <div class="card-head">
+          <h2>Отчёты и сравнение периодов</h2>
+          <div class="subtle">Сводки за 7 дней, 30 дней, месяц и короткая версия для врача.</div>
+        </div>
+        <div class="card-body">
+          <div class="report-grid">
+            <div class="field">
+              <label for="reportPreset">Отчётный период</label>
+              <select id="reportPreset">
+                <option value="7d">Последние 7 дней</option>
+                <option value="30d">Последние 30 дней</option>
+                <option value="month">Текущий месяц</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="comparePreset">Сравнение</label>
+              <select id="comparePreset">
+                <option value="previous">С предыдущим периодом</option>
+                <option value="none">Без сравнения</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="section-spacer">
+            <h3>Сводка</h3>
+            <div id="reportSummary" class="report-box"></div>
+          </div>
+
+          <div class="section-spacer">
+            <h3>Краткий отчёт для врача</h3>
+            <div id="doctorReport" class="report-box"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="sticky-mobile-actions">
+      <button type="button" class="primary" id="mobileScrollToForm">Перейти к форме записи</button>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="settingsModal">
+    <div class="modal-backdrop" id="settingsBackdrop"></div>
+    <div class="modal-content">
+      <div class="modal-head">
+        <div>
+          <h2>Настройки</h2>
+          <div class="subtle">Оформление, списки и данные — всё по разделам.</div>
+        </div>
+        <button type="button" class="icon-btn" id="closeSettingsBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-grid">
+          <aside class="stack">
+            <button type="button" class="tab-btn active settings-nav-btn" data-settings-panel="appearancePanel">Оформление</button>
+            <button type="button" class="tab-btn settings-nav-btn" data-settings-panel="listsPanel">Списки</button>
+            <button type="button" class="tab-btn settings-nav-btn" data-settings-panel="dataPanel">Данные</button>
+          </aside>
+          <div>
+            <section class="settings-panel active" id="appearancePanel">
+              <div class="card-body" style="padding:0;">
+                <div class="stack">
+                  <div class="card" style="box-shadow:none;">
+                    <div class="card-body">
+                      <h3>Готовые темы</h3>
+                      <div class="subtle">Тёмные и светлые варианты: голубая, тёплая, лесная, фиолетовая, розовая.</div>
+                      <div class="section-spacer">
+                        <h4 class="helper">Тёмные</h4>
+                        <div class="theme-grid" id="darkThemesGrid"></div>
+                      </div>
+                      <div class="section-spacer">
+                        <h4 class="helper">Светлые</h4>
+                        <div class="theme-grid" id="lightThemesGrid"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card" style="box-shadow:none;">
+                    <div class="card-body">
+                      <h3>Размер и плотность</h3>
+                      <div class="form-grid section-spacer">
+                        <div class="field">
+                          <label for="fontScaleRange">Размер текста</label>
+                          <input id="fontScaleRange" type="range" min="0.9" max="1.25" step="0.05" value="1" />
+                        </div>
+                        <div class="field">
+                          <label for="contentWidthSelect">Ширина контента</label>
+                          <select id="contentWidthSelect">
+                            <option value="980">Узкая</option>
+                            <option value="1280">Обычная</option>
+                            <option value="1440">Шире</option>
+                          </select>
+                        </div>
+                        <div class="field">
+                          <label for="compactModeSelect">Плотность интерфейса</label>
+                          <select id="compactModeSelect">
+                            <option value="comfortable">Комфортная</option>
+                            <option value="compact">Компактная</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card" style="box-shadow:none;">
+                    <div class="card-body">
+                      <h3>Ручная настройка цветов</h3>
+                      <div class="subtle">Можно перекрасить фон, панели, текст и акцент.</div>
+                      <div class="form-grid section-spacer">
+                        <div class="field"><label for="customBgColor">Фон</label><input id="customBgColor" type="color" /></div>
+                        <div class="field"><label for="customPanelColor">Панели</label><input id="customPanelColor" type="color" /></div>
+                        <div class="field"><label for="customTextColor">Текст</label><input id="customTextColor" type="color" /></div>
+                        <div class="field"><label for="customAccentColor">Акцент</label><input id="customAccentColor" type="color" /></div>
+                      </div>
+                      <div class="btn-row section-spacer">
+                        <button type="button" id="applyCustomColorsBtn">Применить ручные цвета</button>
+                        <button type="button" id="resetStylesBtn">Сбросить стиль</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-panel" id="listsPanel">
+              <div class="stack">
+                <div class="card" style="box-shadow:none;"><div class="card-body"><h3>Лекарства</h3><div class="inline-row section-spacer"><input id="newMedication" type="text" placeholder="Название лекарства" /><button type="button" id="saveMedicationBtn">Сохранить</button></div><div id="medicationsLibrary" class="chip-grid section-spacer"></div></div></div>
+                <div class="card" style="box-shadow:none;"><div class="card-body"><h3>Триггеры</h3><div class="inline-row section-spacer"><input id="newTrigger" type="text" placeholder="Например: недосып" /><button type="button" id="saveTriggerBtn">Сохранить</button></div><div id="triggersLibrary" class="chip-grid section-spacer"></div></div></div>
+                <div class="card" style="box-shadow:none;"><div class="card-body"><h3>Симптомы</h3><div class="inline-row section-spacer"><input id="newSymptom" type="text" placeholder="Например: светобоязнь" /><button type="button" id="saveSymptomBtn">Сохранить</button></div><div id="symptomsLibrary" class="chip-grid section-spacer"></div></div></div>
+              </div>
+            </section>
+
+            <section class="settings-panel" id="dataPanel">
+              <div class="stack">
+                <div class="card" style="box-shadow:none;">
+                  <div class="card-body">
+                    <h3>Экспорт и импорт</h3>
+                    <div class="subtle">JSON-резервная копия и восстановление. Всё локально.</div>
+                    <div class="btn-row section-spacer">
+                      <button type="button" id="exportBtn">Экспорт JSON</button>
+                      <button type="button" id="importBtn">Импорт JSON</button>
+                      <input id="importFile" type="file" accept="application/json" hidden />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'migraine-diary-data-v3';
+    const LEGACY_KEYS = ['migraine-diary-data-v2', 'migraine-diary-data-v1'];
+    const STYLE_KEY = 'migraine-diary-style-v3';
+
+    const defaultData = {
+      version: 3,
+      medications: ['Ибупрофен', 'Суматриптан'],
+      triggers: ['Недосып', 'Стресс', 'Яркий свет', 'Пропуск еды', 'Долгая работа за экраном'],
+      symptoms: ['Тошнота', 'Светобоязнь', 'Шумочувствительность', 'Аура'],
+      entries: []
+    };
+
+    const themePresets = {
+      blueDark: { label: 'Голубая ночь', mode: 'dark', bg: '#0b1120', panel: '#111827', panel2: '#182235', panel3: '#22304a', text: '#e5eefb', muted: '#98a7c2', accent: '#7dd3fc', accentStrong: '#38bdf8', success: '#4ade80', danger: '#fb7185' },
+      blueLight: { label: 'Голубое утро', mode: 'light', bg: '#eff6ff', panel: '#ffffff', panel2: '#f8fbff', panel3: '#e8f1fb', text: '#0f172a', muted: '#526277', accent: '#38bdf8', accentStrong: '#0284c7', success: '#22c55e', danger: '#e11d48' },
+      warmDark: { label: 'Тёплый вечер', mode: 'dark', bg: '#1b1410', panel: '#2a211c', panel2: '#33281f', panel3: '#49372b', text: '#fff4e8', muted: '#d2b79e', accent: '#fdba74', accentStrong: '#fb923c', success: '#86efac', danger: '#fb7185' },
+      warmLight: { label: 'Тёплый день', mode: 'light', bg: '#fff7ed', panel: '#fffaf4', panel2: '#fff1e4', panel3: '#ffe4cc', text: '#3b2213', muted: '#8b5e3c', accent: '#fb923c', accentStrong: '#ea580c', success: '#22c55e', danger: '#e11d48' },
+      forestDark: { label: 'Лесная ночь', mode: 'dark', bg: '#081510', panel: '#102019', panel2: '#173026', panel3: '#204135', text: '#e7fff2', muted: '#93b7a6', accent: '#86efac', accentStrong: '#22c55e', success: '#4ade80', danger: '#fb7185' },
+      forestLight: { label: 'Лесной свет', mode: 'light', bg: '#f2fbf5', panel: '#fbfffc', panel2: '#edf9f0', panel3: '#dbf0df', text: '#123020', muted: '#557565', accent: '#4ade80', accentStrong: '#16a34a', success: '#22c55e', danger: '#e11d48' },
+      violetDark: { label: 'Фиолетовая ночь', mode: 'dark', bg: '#120d1d', panel: '#1b1530', panel2: '#261d43', panel3: '#35295b', text: '#f3ecff', muted: '#b6a9d6', accent: '#c4b5fd', accentStrong: '#8b5cf6', success: '#4ade80', danger: '#fb7185' },
+      violetLight: { label: 'Фиолетовый туман', mode: 'light', bg: '#f7f5ff', panel: '#ffffff', panel2: '#f1ecff', panel3: '#e4dcff', text: '#231942', muted: '#6f6296', accent: '#a78bfa', accentStrong: '#7c3aed', success: '#22c55e', danger: '#e11d48' },
+      pinkDark: { label: 'Розовый неон', mode: 'dark', bg: '#1b0d16', panel: '#2a1323', panel2: '#381a2f', panel3: '#4c2440', text: '#ffeaf5', muted: '#d0a8be', accent: '#f9a8d4', accentStrong: '#ec4899', success: '#4ade80', danger: '#fb7185' },
+      pinkLight: { label: 'Розовый рассвет', mode: 'light', bg: '#fff1f7', panel: '#fffafe', panel2: '#ffe6f1', panel3: '#ffd0e5', text: '#4a1631', muted: '#8c4a6d', accent: '#f472b6', accentStrong: '#db2777', success: '#22c55e', danger: '#e11d48' }
+    };
+
+    const defaultStyle = {
+      themePreset: 'blueDark',
+      fontScale: '1',
+      contentWidth: '1280',
+      compactMode: 'comfortable',
+      customColors: null
+    };
+
+    let data = loadData();
+    let styleSettings = loadStyleSettings();
+    let selectedMedications = [];
+    let editingEntryId = null;
+    let hadPain = true;
+    let entryMode = 'full';
+    let currentCalendarDate = new Date();
+    let filters = getDefaultFilters();
+
+    const qs = (id) => document.getElementById(id);
+
+    const form = qs('entryForm');
+    const formTitle = qs('formTitle');
+    const dateInput = qs('date');
+    const startTimeInput = qs('startTime');
+    const durationInput = qs('duration');
+    const painInput = qs('painLevel');
+    const painValue = qs('painValue');
+    const stressInput = qs('stressLevel');
+    const sleepInput = qs('sleepHours');
+    const hydrationInput = qs('hydration');
+    const mealStatusInput = qs('mealStatus');
+    const weatherNoteInput = qs('weatherNote');
+    const notesInput = qs('notes');
+    const medicationSelect = qs('medicationSelect');
+    const selectedMedicationsBox = qs('selectedMedications');
+    const triggersBox = qs('triggersBox');
+    const symptomsBox = qs('symptomsBox');
+    const medicationDoseInput = qs('medicationDose');
+    const medicationEffectInput = qs('medicationEffect');
+    const reliefMinutesInput = qs('reliefMinutes');
+    const isImportantInput = qs('isImportant');
+    const entryList = qs('entryList');
+    const searchInput = qs('searchInput');
+    const saveEntryBtn = qs('saveEntryBtn');
+    const cancelEditBtn = qs('cancelEditBtn');
+    const painSection = qs('painSection');
+    const hadPainYesBtn = qs('hadPainYes');
+    const hadPainNoBtn = qs('hadPainNo');
+    const mobileScrollToFormBtn = qs('mobileScrollToForm');
+    const periodPreset = qs('periodPreset');
+    const painFilter = qs('painFilter');
+    const fromDate = qs('fromDate');
+    const toDate = qs('toDate');
+    const severityFilter = qs('severityFilter');
+    const importantOnly = qs('importantOnly');
+    const medicationFilter = qs('medicationFilter');
+    const triggerFilter = qs('triggerFilter');
+    const symptomFilter = qs('symptomFilter');
+    const resetFiltersBtn = qs('resetFiltersBtn');
+    const reportPreset = qs('reportPreset');
+    const comparePreset = qs('comparePreset');
+    const reportSummary = qs('reportSummary');
+    const doctorReport = qs('doctorReport');
+    const calendarTitle = qs('calendarTitle');
+    const calendarDayNames = qs('calendarDayNames');
+    const calendarGrid = qs('calendarGrid');
+    const prevMonthBtn = qs('prevMonthBtn');
+    const nextMonthBtn = qs('nextMonthBtn');
+
+    const totalEntriesEl = qs('totalEntries');
+    const painDaysEl = qs('painDays');
+    const avgPainEl = qs('avgPain');
+    const avgDurationEl = qs('avgDuration');
+    const maxPainEl = qs('maxPain');
+    const noPainDaysEl = qs('noPainDays');
+    const insightsEl = qs('insights');
+
+    const newMedicationInput = qs('newMedication');
+    const newTriggerInput = qs('newTrigger');
+    const newSymptomInput = qs('newSymptom');
+    const medicationsLibrary = qs('medicationsLibrary');
+    const triggersLibrary = qs('triggersLibrary');
+    const symptomsLibrary = qs('symptomsLibrary');
+
+    const fontScaleRange = qs('fontScaleRange');
+    const contentWidthSelect = qs('contentWidthSelect');
+    const compactModeSelect = qs('compactModeSelect');
+    const customBgColor = qs('customBgColor');
+    const customPanelColor = qs('customPanelColor');
+    const customTextColor = qs('customTextColor');
+    const customAccentColor = qs('customAccentColor');
+    const resetStylesBtn = qs('resetStylesBtn');
+    const applyCustomColorsBtn = qs('applyCustomColorsBtn');
+    const openSettingsBtn = qs('openSettingsBtn');
+    const closeSettingsBtn = qs('closeSettingsBtn');
+    const settingsModal = qs('settingsModal');
+    const settingsBackdrop = qs('settingsBackdrop');
+    const exportBtn = qs('exportBtn');
+    const importBtn = qs('importBtn');
+    const importFile = qs('importFile');
+    const darkThemesGrid = qs('darkThemesGrid');
+    const lightThemesGrid = qs('lightThemesGrid');
+
+    dateInput.value = todayLocal();
+    painValue.textContent = painInput.value;
+
+    painInput.addEventListener('input', () => painValue.textContent = painInput.value);
+    hadPainYesBtn.addEventListener('click', () => setHadPain(true));
+    hadPainNoBtn.addEventListener('click', () => setHadPain(false));
+    qs('addMedicationBtn').addEventListener('click', addSelectedMedicationFromSelect);
+    qs('saveMedicationBtn').addEventListener('click', () => addLibraryItem('medications', newMedicationInput.value));
+    qs('saveTriggerBtn').addEventListener('click', () => addLibraryItem('triggers', newTriggerInput.value));
+    qs('saveSymptomBtn').addEventListener('click', () => addLibraryItem('symptoms', newSymptomInput.value));
+    cancelEditBtn.addEventListener('click', resetForm);
+    mobileScrollToFormBtn.addEventListener('click', () => document.querySelector('.hero').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+
+    exportBtn.addEventListener('click', exportData);
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', importDataFromFile);
+
+    openSettingsBtn.addEventListener('click', openSettings);
+    closeSettingsBtn.addEventListener('click', closeSettings);
+    settingsBackdrop.addEventListener('click', closeSettings);
+    document.querySelectorAll('.settings-nav-btn').forEach(btn => btn.addEventListener('click', () => openSettingsPanel(btn.dataset.settingsPanel)));
+
+    fontScaleRange.addEventListener('input', () => updateStyleSetting('fontScale', fontScaleRange.value));
+    contentWidthSelect.addEventListener('change', () => updateStyleSetting('contentWidth', contentWidthSelect.value));
+    compactModeSelect.addEventListener('change', () => updateStyleSetting('compactMode', compactModeSelect.value));
+    applyCustomColorsBtn.addEventListener('click', applyCustomColors);
+    resetStylesBtn.addEventListener('click', resetStyles);
+
+    periodPreset.addEventListener('change', onFiltersChange);
+    painFilter.addEventListener('change', onFiltersChange);
+    fromDate.addEventListener('change', onFiltersChange);
+    toDate.addEventListener('change', onFiltersChange);
+    severityFilter.addEventListener('change', onFiltersChange);
+    importantOnly.addEventListener('change', onFiltersChange);
+    medicationFilter.addEventListener('change', onFiltersChange);
+    triggerFilter.addEventListener('change', onFiltersChange);
+    symptomFilter.addEventListener('change', onFiltersChange);
+    resetFiltersBtn.addEventListener('click', resetFilters);
+    searchInput.addEventListener('input', renderAll);
+    reportPreset.addEventListener('change', renderReports);
+    comparePreset.addEventListener('change', renderReports);
+
+    prevMonthBtn.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); renderCalendar(); });
+    nextMonthBtn.addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); renderCalendar(); });
+
+    document.querySelectorAll('#entryModeTabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => setEntryMode(btn.dataset.entryMode));
+    });
+
+    document.querySelectorAll('#mainTabs .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => setMainTab(btn.dataset.mainTab));
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const entry = collectFormEntry();
+      if (editingEntryId) {
+        const index = data.entries.findIndex(item => item.id === editingEntryId);
+        if (index !== -1) data.entries[index] = entry;
+      } else {
+        data.entries.push(entry);
+      }
+      sortEntries();
+      saveData();
+      resetForm();
+      renderAll();
+      setMainTab('dashboardTab');
+    });
+
+    window.addEventListener('resize', drawChart);
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !settingsModal.classList.contains('hidden')) closeSettings();
+    });
+
+    function todayLocal() {
+      const now = new Date();
+      const tzOffset = now.getTimezoneOffset() * 60000;
+      return new Date(now - tzOffset).toISOString().slice(0, 10);
+    }
+
+    function getDefaultFilters() {
+      return {
+        periodPreset: 'all',
+        painFilter: 'all',
+        fromDate: '',
+        toDate: '',
+        severityFilter: 'all',
+        importantOnly: false,
+        medicationFilter: 'all',
+        triggerFilter: 'all',
+        symptomFilter: 'all'
+      };
+    }
+
+    function loadData() {
+      try {
+        const candidates = [STORAGE_KEY, ...LEGACY_KEYS];
+        let raw = null;
+        for (const key of candidates) {
+          raw = localStorage.getItem(key);
+          if (raw) break;
+        }
+        if (!raw) return clone(defaultData);
+        return normalizeImportedData(JSON.parse(raw));
+      } catch {
+        return clone(defaultData);
+      }
+    }
+
+    function loadStyleSettings() {
+      try {
+        const raw = localStorage.getItem(STYLE_KEY) || localStorage.getItem('migraine-diary-style-v2');
+        return raw ? { ...defaultStyle, ...JSON.parse(raw) } : { ...defaultStyle };
+      } catch {
+        return { ...defaultStyle };
+      }
+    }
+
+    function normalizeImportedData(raw) {
+      if (!raw || typeof raw !== 'object') throw new Error('Неверный формат файла');
+      const normalized = {
+        version: 3,
+        medications: uniqueStrings(Array.isArray(raw.medications) ? raw.medications : defaultData.medications),
+        triggers: uniqueStrings(Array.isArray(raw.triggers) ? raw.triggers : defaultData.triggers),
+        symptoms: uniqueStrings(Array.isArray(raw.symptoms) ? raw.symptoms : defaultData.symptoms),
+        entries: []
+      };
+      const sourceEntries = Array.isArray(raw.entries) ? raw.entries : [];
+      normalized.entries = sourceEntries.map((entry, index) => normalizeEntry(entry, index));
+      normalized.medications = uniqueStrings([...defaultData.medications, ...normalized.medications, ...normalized.entries.flatMap(e => e.medications.map(m => m.name))]);
+      normalized.triggers = uniqueStrings([...defaultData.triggers, ...normalized.triggers, ...normalized.entries.flatMap(e => e.triggers)]);
+      normalized.symptoms = uniqueStrings([...defaultData.symptoms, ...normalized.symptoms, ...normalized.entries.flatMap(e => e.symptoms)]);
+      return normalized;
+    }
+
+    function normalizeEntry(entry, index) {
+      const meds = Array.isArray(entry.medications)
+        ? entry.medications.map(item => {
+            if (typeof item === 'string') return { name: item, dose: '', effect: '', reliefMinutes: null };
+            return {
+              name: safeString(item.name),
+              dose: safeString(item.dose),
+              effect: safeString(item.effect),
+              reliefMinutes: normalizeNumber(item.reliefMinutes)
+            };
+          }).filter(item => item.name)
+        : [];
+
+      return {
+        id: String(entry.id || Date.now() + index),
+        date: safeString(entry.date) || todayLocal(),
+        startTime: safeString(entry.startTime),
+        hadPain: typeof entry.hadPain === 'boolean' ? entry.hadPain : Number(entry.painLevel || 0) > 0,
+        painLevel: Number(entry.painLevel) || 0,
+        duration: Number(entry.duration) || 0,
+        stressLevel: normalizeNumber(entry.stressLevel),
+        sleepHours: normalizeNumber(entry.sleepHours),
+        hydration: safeString(entry.hydration),
+        mealStatus: safeString(entry.mealStatus),
+        weatherNote: safeString(entry.weatherNote),
+        medications: meds,
+        triggers: uniqueStrings(Array.isArray(entry.triggers) ? entry.triggers : []),
+        symptoms: uniqueStrings(Array.isArray(entry.symptoms) ? entry.symptoms : []),
+        notes: safeString(entry.notes),
+        important: Boolean(entry.important),
+        updatedAt: safeString(entry.updatedAt) || new Date().toISOString()
+      };
+    }
+
+    function collectFormEntry() {
+      return {
+        id: editingEntryId || String(Date.now()),
+        date: dateInput.value,
+        startTime: startTimeInput.value || '',
+        hadPain,
+        painLevel: hadPain ? Number(painInput.value) : 0,
+        duration: hadPain ? (Number(durationInput.value) || 0) : 0,
+        stressLevel: numberOrNull(stressInput.value),
+        sleepHours: numberOrNull(sleepInput.value),
+        hydration: hydrationInput.value || '',
+        mealStatus: mealStatusInput.value || '',
+        weatherNote: weatherNoteInput.value.trim(),
+        medications: hadPain ? selectedMedications.map(name => ({
+          name,
+          dose: medicationDoseInput.value.trim(),
+          effect: medicationEffectInput.value || '',
+          reliefMinutes: numberOrNull(reliefMinutesInput.value)
+        })) : [],
+        triggers: getCheckedValues('trigger'),
+        symptoms: getCheckedValues('symptom'),
+        notes: notesInput.value.trim(),
+        important: isImportantInput.checked,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function saveStyleSettings() {
+      localStorage.setItem(STYLE_KEY, JSON.stringify(styleSettings));
+    }
+
+    function clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function safeString(value) {
+      return typeof value === 'string' ? value.trim() : '';
+    }
+
+    function uniqueStrings(items) {
+      return [...new Set((items || []).map(safeString).filter(Boolean))];
+    }
+
+    function normalizeNumber(value) {
+      if (value === '' || value === null || value === undefined) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function numberOrNull(value) {
+      if (value === '') return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function sortEntries() {
+      data.entries.sort((a, b) => `${a.date}T${a.startTime || '00:00'}`.localeCompare(`${b.date}T${b.startTime || '00:00'}`));
+    }
+
+    function setHadPain(value) {
+      hadPain = value;
+      hadPainYesBtn.classList.toggle('active', value === true);
+      hadPainNoBtn.classList.toggle('active', value === false);
+      painSection.style.opacity = value ? '1' : '0.55';
+      painSection.style.pointerEvents = value ? 'auto' : 'none';
+      durationInput.disabled = !value;
+      painInput.disabled = !value;
+      medicationSelect.disabled = !value;
+      qs('addMedicationBtn').disabled = !value;
+      if (!value) selectedMedications = [];
+      renderSelectedMedications();
+    }
+
+    function setEntryMode(mode) {
+      entryMode = mode;
+      document.querySelectorAll('#entryModeTabs .tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.entryMode === mode));
+      document.querySelectorAll('.quick-hide').forEach(el => el.style.display = mode === 'quick' ? 'none' : 'block');
+      if (mode === 'quick') {
+        notesInput.placeholder = 'Короткая заметка, если нужно';
+      } else {
+        notesInput.placeholder = 'Что происходило, что могло повлиять, помогли ли лекарства, как ощущалась боль...';
+      }
+    }
+
+    function setMainTab(tabId) {
+      document.querySelectorAll('#mainTabs .tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mainTab === tabId));
+      document.querySelectorAll('.main-tab').forEach(tab => tab.style.display = tab.id === tabId ? 'block' : 'none');
+      if (tabId === 'calendarTab') renderCalendar();
+      if (tabId === 'reportsTab') renderReports();
+    }
+
+    function addLibraryItem(key, rawValue) {
+      const value = safeString(rawValue);
+      if (!value) return;
+      if (!data[key].includes(value)) {
+        data[key].push(value);
+        saveData();
+        renderAllLibraries();
+        renderFilterOptions();
+        if (key === 'medications') renderMedicationOptions();
+        if (key === 'triggers') renderTriggers(getCheckedValues('trigger'));
+        if (key === 'symptoms') renderSymptoms(getCheckedValues('symptom'));
+      }
+      if (key === 'medications') newMedicationInput.value = '';
+      if (key === 'triggers') newTriggerInput.value = '';
+      if (key === 'symptoms') newSymptomInput.value = '';
+    }
+
+    function addSelectedMedicationFromSelect() {
+      const med = medicationSelect.value;
+      if (!med) return;
+      if (!selectedMedications.includes(med)) selectedMedications.push(med);
+      renderSelectedMedications();
+    }
+
+    function renderMedicationOptions() {
+      medicationSelect.innerHTML = '<option value="">Выберите лекарство</option>' + data.medications.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+    }
+
+    function renderFilterOptions() {
+      medicationFilter.innerHTML = '<option value="all">Все лекарства</option>' + data.medications.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+      triggerFilter.innerHTML = '<option value="all">Все триггеры</option>' + data.triggers.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+      symptomFilter.innerHTML = '<option value="all">Все симптомы</option>' + data.symptoms.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+      medicationFilter.value = filters.medicationFilter;
+      triggerFilter.value = filters.triggerFilter;
+      symptomFilter.value = filters.symptomFilter;
+    }
+
+    function renderSelectedMedications() {
+      if (!selectedMedications.length) {
+        selectedMedicationsBox.innerHTML = '<div class="helper">Пока лекарства не добавлены в текущую запись.</div>';
+        return;
+      }
+      selectedMedicationsBox.innerHTML = selectedMedications.map(name => `<span class="badge">💊 ${escapeHtml(name)} <button type="button" class="ghost" style="padding:2px 8px;min-height:auto;" onclick="removeSelectedMedication('${escapeJs(name)}')">×</button></span>`).join('');
+    }
+
+    function renderCheckChips(container, items, name, selectedSet) {
+      container.innerHTML = items.map(item => `
+        <label class="chip ${selectedSet.has(item) ? 'active' : ''}">
+          <input type="checkbox" name="${name}" value="${escapeHtml(item)}" ${selectedSet.has(item) ? 'checked' : ''} />
+          <span>${escapeHtml(item)}</span>
+        </label>
+      `).join('');
+      container.querySelectorAll('input[type="checkbox"]').forEach(input => input.addEventListener('change', () => input.closest('.chip').classList.toggle('active', input.checked)));
+    }
+
+    function renderTriggers(selected = []) { renderCheckChips(triggersBox, data.triggers, 'trigger', new Set(selected)); }
+    function renderSymptoms(selected = []) { renderCheckChips(symptomsBox, data.symptoms, 'symptom', new Set(selected)); }
+
+    function renderLibrary(container, items, key) {
+      if (!items.length) {
+        container.innerHTML = '<div class="helper">Список пока пуст.</div>';
+        return;
+      }
+      container.innerHTML = items.map(item => `<span class="badge">${escapeHtml(item)} <button type="button" class="ghost" style="padding:2px 8px;min-height:auto;" onclick="removeLibraryItem('${key}','${escapeJs(item)}')">×</button></span>`).join('');
+    }
+
+    function renderAllLibraries() {
+      renderLibrary(medicationsLibrary, data.medications, 'medications');
+      renderLibrary(triggersLibrary, data.triggers, 'triggers');
+      renderLibrary(symptomsLibrary, data.symptoms, 'symptoms');
+    }
+
+    function getCheckedValues(name) {
+      return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+    }
+
+    function resetForm() {
+      editingEntryId = null;
+      formTitle.textContent = 'Новая запись';
+      saveEntryBtn.textContent = 'Сохранить запись';
+      cancelEditBtn.style.display = 'none';
+      dateInput.value = todayLocal();
+      startTimeInput.value = '';
+      durationInput.value = '';
+      painInput.value = '5';
+      painValue.textContent = '5';
+      stressInput.value = '';
+      sleepInput.value = '';
+      hydrationInput.value = '';
+      mealStatusInput.value = '';
+      weatherNoteInput.value = '';
+      notesInput.value = '';
+      medicationDoseInput.value = '';
+      medicationEffectInput.value = '';
+      reliefMinutesInput.value = '';
+      isImportantInput.checked = false;
+      selectedMedications = [];
+      setHadPain(true);
+      renderSelectedMedications();
+      renderTriggers([]);
+      renderSymptoms([]);
+      setEntryMode(entryMode);
+    }
+
+    function editEntry(id) {
+      const entry = data.entries.find(e => e.id === id);
+      if (!entry) return;
+      editingEntryId = id;
+      formTitle.textContent = 'Редактирование записи';
+      saveEntryBtn.textContent = 'Сохранить изменения';
+      cancelEditBtn.style.display = 'inline-flex';
+      dateInput.value = entry.date || todayLocal();
+      startTimeInput.value = entry.startTime || '';
+      durationInput.value = entry.duration || '';
+      painInput.value = String(entry.painLevel || 5);
+      painValue.textContent = entry.hadPain ? String(entry.painLevel || 0) : '0';
+      stressInput.value = entry.stressLevel ?? '';
+      sleepInput.value = entry.sleepHours ?? '';
+      hydrationInput.value = entry.hydration || '';
+      mealStatusInput.value = entry.mealStatus || '';
+      weatherNoteInput.value = entry.weatherNote || '';
+      notesInput.value = entry.notes || '';
+      const firstMed = entry.medications[0] || { dose: '', effect: '', reliefMinutes: '' };
+      medicationDoseInput.value = firstMed.dose || '';
+      medicationEffectInput.value = firstMed.effect || '';
+      reliefMinutesInput.value = firstMed.reliefMinutes ?? '';
+      isImportantInput.checked = Boolean(entry.important);
+      selectedMedications = entry.medications.map(m => m.name);
+      setHadPain(Boolean(entry.hadPain));
+      renderSelectedMedications();
+      renderTriggers(entry.triggers || []);
+      renderSymptoms(entry.symptoms || []);
+      setMainTab('dashboardTab');
+      closeSettings();
+      document.querySelector('.hero').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function deleteEntry(id) {
+      if (!confirm('Удалить запись?')) return;
+      data.entries = data.entries.filter(e => e.id !== id);
+      saveData();
+      if (editingEntryId === id) resetForm();
+      renderAll();
+    }
+
+    function removeLibraryItem(key, value) {
+      const used = data.entries.some(entry => {
+        if (key === 'medications') return entry.medications.some(m => m.name === value);
+        return (entry[key] || []).includes(value);
+      });
+      let message = `Удалить элемент "${value}" из списка?`;
+      if (used) message += ' Он останется в старых записях, но исчезнет из списка выбора.';
+      if (!confirm(message)) return;
+      data[key] = data[key].filter(item => item !== value);
+      saveData();
+      renderAll();
+    }
+
+    function removeSelectedMedication(name) {
+      selectedMedications = selectedMedications.filter(item => item !== name);
+      renderSelectedMedications();
+    }
+
+    function getFilteredEntries() {
+      const query = searchInput.value.trim().toLowerCase();
+      return data.entries.filter(entry => {
+        if (filters.periodPreset !== 'all') {
+          const periodMatch = matchesPeriod(entry.date);
+          if (!periodMatch) return false;
+        }
+        if (filters.periodPreset === 'custom') {
+          if (filters.fromDate && entry.date < filters.fromDate) return false;
+          if (filters.toDate && entry.date > filters.toDate) return false;
+        }
+        if (filters.painFilter === 'pain' && !entry.hadPain) return false;
+        if (filters.painFilter === 'nopain' && entry.hadPain) return false;
+        if (filters.severityFilter !== 'all' && entry.hadPain) {
+          const severity = Number(entry.painLevel || 0);
+          if (filters.severityFilter === '1-3' && !(severity >= 1 && severity <= 3)) return false;
+          if (filters.severityFilter === '4-6' && !(severity >= 4 && severity <= 6)) return false;
+          if (filters.severityFilter === '7-10' && !(severity >= 7 && severity <= 10)) return false;
+        }
+        if (filters.importantOnly && !entry.important) return false;
+        if (filters.medicationFilter !== 'all' && !entry.medications.some(m => m.name === filters.medicationFilter)) return false;
+        if (filters.triggerFilter !== 'all' && !(entry.triggers || []).includes(filters.triggerFilter)) return false;
+        if (filters.symptomFilter !== 'all' && !(entry.symptoms || []).includes(filters.symptomFilter)) return false;
+        if (query) {
+          const haystack = [
+            entry.date,
+            entry.startTime,
+            entry.notes,
+            entry.weatherNote,
+            ...entry.medications.map(m => [m.name, m.dose, m.effect].join(' ')),
+            ...(entry.triggers || []),
+            ...(entry.symptoms || [])
+          ].join(' ').toLowerCase();
+          if (!haystack.includes(query)) return false;
+        }
+        return true;
+      }).sort((a, b) => `${a.date}T${a.startTime || '00:00'}`.localeCompare(`${b.date}T${b.startTime || '00:00'}`));
+    }
+
+    function matchesPeriod(date) {
+      const today = new Date(todayLocal());
+      const d = new Date(date);
+      if (filters.periodPreset === 'today') return date === todayLocal();
+      if (filters.periodPreset === '7d') return daysDiff(d, today) <= 6 && d <= today;
+      if (filters.periodPreset === '30d') return daysDiff(d, today) <= 29 && d <= today;
+      if (filters.periodPreset === 'month') return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth();
+      return true;
+    }
+
+    function daysDiff(a, b) {
+      const ms = 24 * 60 * 60 * 1000;
+      return Math.floor((stripTime(b) - stripTime(a)) / ms);
+    }
+
+    function stripTime(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function onFiltersChange() {
+      filters = {
+        periodPreset: periodPreset.value,
+        painFilter: painFilter.value,
+        fromDate: fromDate.value,
+        toDate: toDate.value,
+        severityFilter: severityFilter.value,
+        importantOnly: importantOnly.checked,
+        medicationFilter: medicationFilter.value,
+        triggerFilter: triggerFilter.value,
+        symptomFilter: symptomFilter.value
+      };
+      renderAll();
+    }
+
+    function resetFilters() {
+      filters = getDefaultFilters();
+      periodPreset.value = filters.periodPreset;
+      painFilter.value = filters.painFilter;
+      fromDate.value = '';
+      toDate.value = '';
+      severityFilter.value = filters.severityFilter;
+      importantOnly.checked = false;
+      medicationFilter.value = 'all';
+      triggerFilter.value = 'all';
+      symptomFilter.value = 'all';
+      renderAll();
+    }
+
+    function renderEntries() {
+      const entries = [...getFilteredEntries()].reverse();
+      if (!entries.length) {
+        entryList.innerHTML = '<div class="empty">Записей пока нет или ничего не найдено по текущим фильтрам.</div>';
+        return;
+      }
+
+      let html = '';
+      let currentGroup = '';
+      entries.forEach(entry => {
+        const group = monthTitle(entry.date);
+        if (group !== currentGroup) {
+          currentGroup = group;
+          html += `<div class="entry-group-title">${escapeHtml(group)}</div>`;
+        }
+        const severityClass = entry.hadPain ? (entry.painLevel >= 7 ? 'severity-high' : entry.painLevel >= 4 ? 'severity-mid' : 'severity-low') : 'no-pain';
+        const meta = [];
+        if (entry.startTime) meta.push(`Начало: ${escapeHtml(entry.startTime)}`);
+        if (entry.hadPain) meta.push(`Длительность: ${entry.duration || 0} ч`);
+        if (entry.stressLevel !== null) meta.push(`Стресс: ${entry.stressLevel}/10`);
+        if (entry.sleepHours !== null) meta.push(`Сон: ${entry.sleepHours} ч`);
+        if (entry.hydration) meta.push(`Вода: ${hydrationLabel(entry.hydration)}`);
+        if (entry.mealStatus) meta.push(`Питание: ${mealStatusLabel(entry.mealStatus)}`);
+        const meds = entry.medications.map(m => `💊 ${m.name}${m.dose ? ' · ' + m.dose : ''}${m.effect ? ' · ' + effectLabel(m.effect) : ''}${m.reliefMinutes ? ' · ' + m.reliefMinutes + ' мин' : ''}`);
+        html += `
+          <article class="entry ${severityClass}">
+            <div class="entry-head">
+              <div>
+                <div class="entry-date">${escapeHtml(entry.date)}${entry.important ? ' ⭐' : ''}</div>
+                <div class="entry-sub">${entry.hadPain ? 'Боль ' + entry.painLevel + '/10' : 'День без боли'}</div>
+                <div class="entry-sub">${meta.join(' · ') || 'Без дополнительных деталей'}</div>
+              </div>
+              <div class="entry-actions">
+                <button type="button" onclick="editEntry('${entry.id}')">Редактировать</button>
+                <button type="button" class="danger" onclick="deleteEntry('${entry.id}')">Удалить</button>
+              </div>
+            </div>
+            ${meds.length ? `<div class="pill-row">${meds.map(m => `<span class="badge">${escapeHtml(m)}</span>`).join('')}</div>` : ''}
+            ${(entry.triggers || []).length ? `<div class="pill-row">${entry.triggers.map(t => `<span class="badge">⚡ ${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+            ${(entry.symptoms || []).length ? `<div class="pill-row">${entry.symptoms.map(s => `<span class="badge">🩺 ${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+            ${entry.weatherNote ? `<div class="pill-row"><span class="badge">🌦 ${escapeHtml(entry.weatherNote)}</span></div>` : ''}
+            ${entry.notes ? `<div class="note">${escapeHtml(entry.notes)}</div>` : ''}
+          </article>
+        `;
+      });
+      entryList.innerHTML = html;
+    }
+
+    function renderStats() {
+      const entries = getFilteredEntries();
+      const painEntries = entries.filter(e => e.hadPain);
+      const noPainEntries = entries.filter(e => !e.hadPain);
+      totalEntriesEl.textContent = String(entries.length);
+      painDaysEl.textContent = String(painEntries.length);
+      noPainDaysEl.textContent = String(noPainEntries.length);
+      avgPainEl.textContent = painEntries.length ? (painEntries.reduce((s, e) => s + e.painLevel, 0) / painEntries.length).toFixed(1) : '0';
+      avgDurationEl.textContent = painEntries.length ? ((painEntries.reduce((s, e) => s + (e.duration || 0), 0) / painEntries.length).toFixed(1) + 'ч') : '0ч';
+      maxPainEl.textContent = painEntries.length ? String(Math.max(...painEntries.map(e => e.painLevel))) : '0';
+    }
+
+    function renderInsights() {
+      const entries = getFilteredEntries();
+      const painEntries = entries.filter(e => e.hadPain);
+      if (!entries.length) {
+        insightsEl.innerHTML = '<li>Добавь записи или ослабь фильтры, и здесь появятся паттерны.</li>';
+        return;
+      }
+      if (!painEntries.length) {
+        insightsEl.innerHTML = '<li>Сейчас в выборке только дни без боли. Это тоже полезно — база для сравнения растёт.</li>';
+        return;
+      }
+      const insights = [];
+      const avgPain = painEntries.reduce((s, e) => s + e.painLevel, 0) / painEntries.length;
+      insights.push(`Средняя интенсивность боли в текущей выборке: ${avgPain.toFixed(1)} из 10.`);
+      const topTrigger = getTopByAverage(data.triggers, trigger => painEntries.filter(e => e.triggers.includes(trigger)).map(e => e.painLevel));
+      if (topTrigger) insights.push(`Самый тяжёлый повторяющийся триггер: ${topTrigger.name} — средняя боль ${topTrigger.avg.toFixed(1)} (${topTrigger.count} записей).`);
+      const medScores = {};
+      painEntries.forEach(entry => entry.medications.forEach(m => {
+        if (!medScores[m.name]) medScores[m.name] = { used: 0, helped: 0, partial: 0, no: 0 };
+        medScores[m.name].used += 1;
+        if (m.effect === 'helped') medScores[m.name].helped += 1;
+        if (m.effect === 'partial') medScores[m.name].partial += 1;
+        if (m.effect === 'no') medScores[m.name].no += 1;
+      }));
+      const bestMed = Object.entries(medScores)
+        .filter(([, v]) => v.used >= 2)
+        .map(([name, v]) => ({ name, score: (v.helped + v.partial * 0.5) / v.used, used: v.used }))
+        .sort((a, b) => b.score - a.score)[0];
+      if (bestMed) insights.push(`По отмеченной эффективности лучше всего выглядит ${bestMed.name}: условный балл ${(bestMed.score * 100).toFixed(0)}% (${bestMed.used} использований).`);
+      const lowSleep = painEntries.filter(e => e.sleepHours !== null && e.sleepHours < 6);
+      const normalSleep = painEntries.filter(e => e.sleepHours !== null && e.sleepHours >= 6);
+      if (lowSleep.length >= 2 && normalSleep.length >= 2) {
+        const lowAvg = average(lowSleep.map(e => e.painLevel));
+        const normalAvg = average(normalSleep.map(e => e.painLevel));
+        if (lowAvg > normalAvg) insights.push(`При сне меньше 6 часов средняя боль выше: ${lowAvg.toFixed(1)} против ${normalAvg.toFixed(1)}.`);
+      }
+      const highStress = painEntries.filter(e => e.stressLevel !== null && e.stressLevel >= 7);
+      const lowStress = painEntries.filter(e => e.stressLevel !== null && e.stressLevel <= 4);
+      if (highStress.length >= 2 && lowStress.length >= 2) {
+        const highAvg = average(highStress.map(e => e.painLevel));
+        const lowAvg = average(lowStress.map(e => e.painLevel));
+        if (highAvg > lowAvg) insights.push(`Высокий стресс совпадает с более сильной болью: ${highAvg.toFixed(1)} против ${lowAvg.toFixed(1)}.`);
+      }
+      const weekdayMap = {};
+      painEntries.forEach(e => {
+        const day = weekdayName(e.date);
+        weekdayMap[day] = (weekdayMap[day] || 0) + 1;
+      });
+      const topWeekday = Object.entries(weekdayMap).sort((a, b) => b[1] - a[1])[0];
+      if (topWeekday) insights.push(`Чаще всего эпизоды в текущей выборке приходятся на: ${topWeekday[0]} (${topWeekday[1]}).`);
+      const topSymptom = Object.entries(countValues(painEntries.flatMap(e => e.symptoms))).sort((a, b) => b[1] - a[1])[0];
+      if (topSymptom) insights.push(`Самый частый симптом: ${topSymptom[0]} (${topSymptom[1]} записей).`);
+      insightsEl.innerHTML = insights.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+    }
+
+    function getTopByAverage(items, extractor) {
+      const rows = items.map(name => {
+        const values = extractor(name);
+        return { name, count: values.length, avg: values.length ? average(values) : 0 };
+      }).filter(row => row.count >= 2).sort((a, b) => b.avg - a.avg);
+      return rows[0] || null;
+    }
+
+    function average(arr) {
+      return arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0;
+    }
+
+    function countValues(values) {
+      const map = {};
+      values.forEach(v => map[v] = (map[v] || 0) + 1);
+      return map;
+    }
+
+    function monthTitle(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+    }
+
+    function weekdayName(dateStr) {
+      const names = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+      return names[new Date(dateStr).getDay()];
+    }
+
+    function drawChart() {
+      const canvas = qs('painChart');
+      const ctx = canvas.getContext('2d');
+      const ratio = window.devicePixelRatio || 1;
+      const displayWidth = canvas.clientWidth || 900;
+      const displayHeight = 320;
+      canvas.width = Math.floor(displayWidth * ratio);
+      canvas.height = Math.floor(displayHeight * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
+      const computed = getComputedStyle(document.documentElement);
+      const gridColor = computed.getPropertyValue('--border').trim() || 'rgba(148,163,184,0.18)';
+      const textColor = computed.getPropertyValue('--muted').trim() || '#94a3b8';
+      const lineColor = computed.getPropertyValue('--accent-strong').trim() || '#38bdf8';
+      const pointColor = computed.getPropertyValue('--success').trim() || '#4ade80';
+      const entries = getFilteredEntries().filter(e => e.hadPain);
+      if (!entries.length) {
+        ctx.fillStyle = textColor;
+        ctx.font = '15px Arial';
+        ctx.fillText('Нет данных для графика', 20, 36);
+        return;
+      }
+      const padding = { top: 20, right: 16, bottom: 38, left: 32 };
+      const width = displayWidth - padding.left - padding.right;
+      const height = displayHeight - padding.top - padding.bottom;
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 10; i++) {
+        const y = padding.top + height - (height / 10) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(displayWidth - padding.right, y);
+        ctx.stroke();
+        ctx.fillStyle = textColor;
+        ctx.font = '11px Arial';
+        ctx.fillText(String(i), 6, y + 4);
+      }
+      ctx.beginPath();
+      entries.forEach((entry, index) => {
+        const x = padding.left + (entries.length === 1 ? width / 2 : (width / (entries.length - 1)) * index);
+        const y = padding.top + height - (entry.painLevel / 10) * height;
+        if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      entries.forEach((entry, index) => {
+        const x = padding.left + (entries.length === 1 ? width / 2 : (width / (entries.length - 1)) * index);
+        const y = padding.top + height - (entry.painLevel / 10) * height;
+        ctx.fillStyle = pointColor;
+        ctx.beginPath();
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = textColor;
+        ctx.font = '10px Arial';
+        const shortDate = entry.date.slice(5);
+        const textX = Math.max(0, Math.min(displayWidth - 28, x - 14));
+        ctx.fillText(shortDate, textX, displayHeight - 12);
+      });
+    }
+
+    function renderCalendar() {
+      const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+      calendarDayNames.innerHTML = dayNames.map(name => `<div class="calendar-day-name">${name}</div>`).join('');
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      calendarTitle.textContent = firstDay.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+      const startOffset = (firstDay.getDay() + 6) % 7;
+      const totalCells = 42;
+      const filtered = getFilteredEntries();
+      calendarGrid.innerHTML = '';
+      for (let i = 0; i < totalCells; i++) {
+        const dayNumber = i - startOffset + 1;
+        const cellDate = new Date(year, month, dayNumber);
+        const dateStr = formatDate(cellDate);
+        const dayEntries = filtered.filter(e => e.date === dateStr);
+        const dayPain = dayEntries.find(e => e.hadPain);
+        const noPain = dayEntries.find(e => !e.hadPain);
+        let cls = 'calendar-day';
+        if (cellDate.getMonth() !== month) cls += ' other-month';
+        if (dateStr === todayLocal()) cls += ' today';
+        if (dayPain) cls += dayPain.painLevel >= 7 ? ' severity-high' : dayPain.painLevel >= 4 ? ' severity-mid' : ' severity-low';
+        else if (noPain) cls += ' no-pain';
+        const text = dayPain ? `Боль ${dayPain.painLevel}/10` : noPain ? 'Без боли' : '';
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = cls;
+        el.innerHTML = `<strong>${cellDate.getDate()}</strong><div class="calendar-mini">${escapeHtml(text)}</div>`;
+        el.addEventListener('click', () => {
+          const exact = data.entries.find(e => e.date === dateStr);
+          if (exact) editEntry(exact.id);
+          else {
+            setMainTab('dashboardTab');
+            dateInput.value = dateStr;
+          }
+        });
+        calendarGrid.appendChild(el);
+      }
+    }
+
+    function renderReports() {
+      const preset = reportPreset.value;
+      const current = getRangeEntries(preset, 0);
+      const previous = comparePreset.value === 'previous' ? getRangeEntries(preset, 1) : [];
+      reportSummary.textContent = buildSummaryText(current, previous, preset);
+      doctorReport.textContent = buildDoctorReport(current, preset);
+    }
+
+    function getRangeEntries(preset, offsetPeriod) {
+      const today = new Date(todayLocal());
+      let start, end;
+      if (preset === '7d') {
+        end = new Date(today);
+        end.setDate(end.getDate() - offsetPeriod * 7);
+        start = new Date(end);
+        start.setDate(start.getDate() - 6);
+      } else if (preset === '30d') {
+        end = new Date(today);
+        end.setDate(end.getDate() - offsetPeriod * 30);
+        start = new Date(end);
+        start.setDate(start.getDate() - 29);
+      } else {
+        const base = new Date(today.getFullYear(), today.getMonth() - offsetPeriod, 1);
+        start = new Date(base.getFullYear(), base.getMonth(), 1);
+        end = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+      }
+      const startStr = formatDate(start);
+      const endStr = formatDate(end);
+      return data.entries.filter(e => e.date >= startStr && e.date <= endStr);
+    }
+
+    function buildSummaryText(entries, previous, preset) {
+      if (!entries.length) return 'За выбранный период записей пока нет.';
+      const painEntries = entries.filter(e => e.hadPain);
+      const noPainEntries = entries.filter(e => !e.hadPain);
+      const avgPain = painEntries.length ? average(painEntries.map(e => e.painLevel)).toFixed(1) : '0';
+      const topTrigger = Object.entries(countValues(painEntries.flatMap(e => e.triggers))).sort((a, b) => b[1] - a[1])[0];
+      const topSymptom = Object.entries(countValues(painEntries.flatMap(e => e.symptoms))).sort((a, b) => b[1] - a[1])[0];
+      let text = `Период: ${reportLabel(preset)}\n`;
+      text += `Всего записей: ${entries.length}\n`;
+      text += `Дней с болью: ${painEntries.length}\n`;
+      text += `Дней без боли: ${noPainEntries.length}\n`;
+      text += `Средняя боль: ${avgPain}/10\n`;
+      if (topTrigger) text += `Частый триггер: ${topTrigger[0]} (${topTrigger[1]})\n`;
+      if (topSymptom) text += `Частый симптом: ${topSymptom[0]} (${topSymptom[1]})\n`;
+      if (previous.length) {
+        const prevPain = previous.filter(e => e.hadPain);
+        const diff = painEntries.length - prevPain.length;
+        text += `\nСравнение с предыдущим периодом:\n`;
+        text += diff > 0 ? `Эпизодов стало больше на ${diff}.\n` : diff < 0 ? `Эпизодов стало меньше на ${Math.abs(diff)}.\n` : 'Количество эпизодов не изменилось.\n';
+      }
+      return text.trim();
+    }
+
+    function buildDoctorReport(entries, preset) {
+      if (!entries.length) return 'Нет данных для отчёта.';
+      const painEntries = entries.filter(e => e.hadPain);
+      const maxPain = painEntries.length ? Math.max(...painEntries.map(e => e.painLevel)) : 0;
+      const avgPain = painEntries.length ? average(painEntries.map(e => e.painLevel)).toFixed(1) : '0';
+      const longEpisodes = painEntries.filter(e => e.duration >= 4).length;
+      const meds = countValues(painEntries.flatMap(e => e.medications.map(m => m.name)));
+      const topMed = Object.entries(meds).sort((a, b) => b[1] - a[1])[0];
+      let text = `Отчёт для врача — ${reportLabel(preset)}\n\n`;
+      text += `Всего записей: ${entries.length}\n`;
+      text += `Эпизодов с болью: ${painEntries.length}\n`;
+      text += `Средняя интенсивность: ${avgPain}/10\n`;
+      text += `Максимальная интенсивность: ${maxPain}/10\n`;
+      text += `Длительных эпизодов (4+ ч): ${longEpisodes}\n`;
+      if (topMed) text += `Чаще всего использовалось: ${topMed[0]} (${topMed[1]})\n`;
+      const important = entries.filter(e => e.important);
+      if (important.length) text += `Важных записей: ${important.length}\n`;
+      return text.trim();
+    }
+
+    function reportLabel(preset) {
+      return preset === '7d' ? 'последние 7 дней' : preset === '30d' ? 'последние 30 дней' : 'текущий месяц';
+    }
+
+    function onSettingsThemeClick(key) {
+      styleSettings.themePreset = key;
+      styleSettings.customColors = null;
+      saveStyleSettings();
+      applyStyleSettings();
+      renderThemePresetCards();
+    }
+
+    function renderThemePresetCards() {
+      const dark = Object.entries(themePresets).filter(([, p]) => p.mode === 'dark');
+      const light = Object.entries(themePresets).filter(([, p]) => p.mode === 'light');
+      darkThemesGrid.innerHTML = dark.map(([key, preset]) => themeCardHtml(key, preset)).join('');
+      lightThemesGrid.innerHTML = light.map(([key, preset]) => themeCardHtml(key, preset)).join('');
+      document.querySelectorAll('.theme-card').forEach(card => card.addEventListener('click', () => onSettingsThemeClick(card.dataset.themePreset)));
+    }
+
+    function themeCardHtml(key, preset) {
+      const active = styleSettings.themePreset === key && !styleSettings.customColors;
+      return `<button type="button" class="theme-card ${active ? 'active' : ''}" data-theme-preset="${key}"><div class="theme-preview"><span style="background:${preset.bg}"></span><span style="background:${preset.panel}"></span><span style="background:${preset.text}"></span><span style="background:${preset.accentStrong}"></span></div><div><strong>${preset.label}</strong></div><div class="helper">${preset.mode === 'dark' ? 'Тёмная' : 'Светлая'} тема</div></button>`;
+    }
+
+    function openSettings() {
+      settingsModal.classList.remove('hidden');
+      renderThemePresetCards();
+    }
+
+    function closeSettings() {
+      settingsModal.classList.add('hidden');
+    }
+
+    function openSettingsPanel(panelId) {
+      document.querySelectorAll('.settings-nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.settingsPanel === panelId));
+      document.querySelectorAll('.settings-panel').forEach(panel => panel.classList.toggle('active', panel.id === panelId));
+    }
+
+    function updateStyleSetting(key, value) {
+      styleSettings[key] = value;
+      saveStyleSettings();
+      applyStyleSettings();
+    }
+
+    function applyCustomColors() {
+      styleSettings.customColors = {
+        bg: customBgColor.value,
+        panel: customPanelColor.value,
+        text: customTextColor.value,
+        accentStrong: customAccentColor.value
+      };
+      saveStyleSettings();
+      applyStyleSettings();
+    }
+
+    function resetStyles() {
+      styleSettings = { ...defaultStyle };
+      saveStyleSettings();
+      applyStyleSettings();
+      renderThemePresetCards();
+    }
+
+    function applyStyleSettings() {
+      const preset = themePresets[styleSettings.themePreset] || themePresets.blueDark;
+      const palette = styleSettings.customColors ? buildCustomPalette(styleSettings.customColors) : preset;
+      applyPalette(palette);
+      document.documentElement.style.setProperty('--font-scale', styleSettings.fontScale);
+      document.documentElement.style.setProperty('--content-width', `${styleSettings.contentWidth}px`);
+      if (styleSettings.compactMode === 'compact') {
+        document.documentElement.style.setProperty('--radius', '14px');
+        document.documentElement.style.setProperty('--card-blur', '8px');
+      } else {
+        document.documentElement.style.setProperty('--radius', '18px');
+        document.documentElement.style.setProperty('--card-blur', '12px');
+      }
+      fontScaleRange.value = styleSettings.fontScale;
+      contentWidthSelect.value = styleSettings.contentWidth;
+      compactModeSelect.value = styleSettings.compactMode;
+      const custom = styleSettings.customColors || { bg: preset.bg, panel: preset.panel, text: preset.text, accentStrong: preset.accentStrong };
+      customBgColor.value = normalizeHex(custom.bg);
+      customPanelColor.value = normalizeHex(custom.panel);
+      customTextColor.value = normalizeHex(custom.text);
+      customAccentColor.value = normalizeHex(custom.accentStrong);
+      drawChart();
+    }
+
+    function applyPalette(palette) {
+      setCssVar('--bg', palette.bg);
+      setCssVar('--panel-solid', palette.panel);
+      setCssVar('--panel', hexToRgba(palette.panel, 0.88));
+      setCssVar('--panel-2', palette.panel2);
+      setCssVar('--panel-3', palette.panel3);
+      setCssVar('--text', palette.text);
+      setCssVar('--muted', palette.muted);
+      setCssVar('--accent', palette.accent);
+      setCssVar('--accent-strong', palette.accentStrong);
+      setCssVar('--success', palette.success);
+      setCssVar('--danger', palette.danger);
+      setCssVar('--border', hexToRgba(palette.text, palette.mode === 'light' ? 0.12 : 0.18));
+      setCssVar('--chart-bg', hexToRgba(palette.panel2, palette.mode === 'light' ? 0.86 : 0.72));
+      setCssVar('--badge-bg', hexToRgba(palette.panel3, 0.95));
+      setCssVar('--note-bg', hexToRgba(palette.panel2, palette.mode === 'light' ? 0.96 : 0.78));
+      setCssVar('--bg-gradient-1', hexToRgba(palette.accentStrong, palette.mode === 'light' ? 0.10 : 0.16));
+      setCssVar('--bg-gradient-2', hexToRgba(palette.success, palette.mode === 'light' ? 0.08 : 0.10));
+    }
+
+    function buildCustomPalette(custom) {
+      const bg = normalizeHex(custom.bg || '#0b1120');
+      const panel = normalizeHex(custom.panel || '#111827');
+      const text = normalizeHex(custom.text || '#e5eefb');
+      const accentStrong = normalizeHex(custom.accentStrong || '#38bdf8');
+      const mode = isLightColor(bg) ? 'light' : 'dark';
+      return {
+        mode,
+        bg,
+        panel,
+        panel2: shiftHex(panel, mode === 'light' ? 8 : 10),
+        panel3: shiftHex(panel, mode === 'light' ? -6 : 18),
+        text,
+        muted: shiftHex(text, mode === 'light' ? -55 : -35),
+        accent: shiftHex(accentStrong, 24),
+        accentStrong,
+        success: mode === 'light' ? '#22c55e' : '#4ade80',
+        danger: mode === 'light' ? '#e11d48' : '#fb7185'
+      };
+    }
+
+    function setCssVar(name, value) { document.documentElement.style.setProperty(name, value); }
+    function hexToRgba(hex, alpha) {
+      const clean = normalizeHex(hex).replace('#', '');
+      const bigint = parseInt(clean, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    function normalizeHex(hex) { return hex && hex.startsWith('#') && hex.length === 7 ? hex : '#000000'; }
+    function shiftHex(hex, amount) {
+      const clean = normalizeHex(hex).replace('#', '');
+      const num = parseInt(clean, 16);
+      let r = Math.min(255, Math.max(0, ((num >> 16) & 255) + amount));
+      let g = Math.min(255, Math.max(0, ((num >> 8) & 255) + amount));
+      let b = Math.min(255, Math.max(0, (num & 255) + amount));
+      return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+    function isLightColor(hex) {
+      const clean = normalizeHex(hex).replace('#', '');
+      const num = parseInt(clean, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return ((0.299 * r + 0.587 * g + 0.114 * b) / 255) > 0.62;
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'migraine-diary-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function importDataFromFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        data = normalizeImportedData(parsed);
+        sortEntries();
+        saveData();
+        resetForm();
+        renderAll();
+        alert('Данные успешно импортированы');
+      } catch (err) {
+        alert('Ошибка импорта: ' + err.message);
+      }
+      importFile.value = '';
+    }
+
+    function effectLabel(value) {
+      return ({ helped: 'помогло', partial: 'частично', no: 'не помогло' }[value] || value);
+    }
+
+    function hydrationLabel(value) {
+      return ({ low: 'мало воды', normal: 'нормально', high: 'много воды' }[value] || value);
+    }
+
+    function mealStatusLabel(value) {
+      return ({ normal: 'как обычно', skipped: 'пропуск еды', late: 'поздний приём пищи' }[value] || value);
+    }
+
+    function formatDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeJs(str) {
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function renderAll() {
+      renderMedicationOptions();
+      renderFilterOptions();
+      renderSelectedMedications();
+      renderTriggers(getCheckedValues('trigger'));
+      renderSymptoms(getCheckedValues('symptom'));
+      renderAllLibraries();
+      renderEntries();
+      renderStats();
+      renderInsights();
+      drawChart();
+      renderCalendar();
+      renderReports();
+    }
+
+    window.removeSelectedMedication = removeSelectedMedication;
+    window.deleteEntry = deleteEntry;
+    window.editEntry = editEntry;
+    window.removeLibraryItem = removeLibraryItem;
+
+    applyStyleSettings();
+    sortEntries();
+    resetForm();
+    setEntryMode('full');
+    renderThemePresetCards();
+    renderAll();
+  </script>
+</body>
+</html>
